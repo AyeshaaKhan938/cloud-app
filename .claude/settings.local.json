@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pandoc /Users/javier/Downloads/Manual_VMFS_Software.docx -t plain)",
+      "Bash(python3 -c ' *)",
+      "Bash(php artisan *)",
+      "Bash(php -l app/Filament/Admin/Resources/ProductTypes/ProductTypeResource.php)",
+      "Bash(php -l app/Filament/Admin/Resources/ProductTags/ProductTagResource.php)",
+      "Bash(php -l app/Filament/Admin/Resources/Orders/OrderResource.php)",
+      "Bash(php -l app/Filament/Admin/Resources/ProductTypes/Pages/ManageProductTypes.php)",
+      "Bash(php -l app/Filament/Admin/Resources/ProductTags/Pages/ManageProductTags.php)",
+      "Bash(php -l app/Filament/Admin/Widgets/DashboardBusinessStats.php)",
+      "Bash(php -l app/Filament/Admin/Widgets/UserSalesRankTable.php)",
+      "Bash(php -l app/Filament/Admin/Widgets/NewDeviceMonthlyTrendChart.php)",
+      "Bash(php -l app/Models/NotificationSetting.php)",
+      "Bash(php -l app/Filament/Admin/Pages/NotificationConfiguration.php)",
+      "Bash(brew services *)",
+      "Bash(mysql --version)",
+      "Bash(php *)"
+    ]
+  }
+}

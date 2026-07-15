@@ -1,0 +1,8 @@
+<?php
+// Live one-liner override — appended to ensure max upload is bumped.
+return array_merge(require __DIR__.'/livewire.php', [
+    'temporary_file_upload' => [
+        'rules' => ['file', 'max:102400'],
+        'max_upload_size' => 102400,
+    ],
+]);

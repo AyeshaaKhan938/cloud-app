@@ -1,0 +1,22 @@
+---
+description: Estándar de módulos de dominio (modelos, policies, servicios, Filament) para VMS Cloud
+globs: app/Filament/**/*.php,app/Models/**/*.php,app/Policies/**/*.php,app/Services/**/*.php,database/migrations/**/*.php,tests/Feature/Filament/**/*.php
+alwaysApply: false
+---
+
+# Estándar de módulos VMS Cloud
+
+Seguir el documento `docs/MODULE_STANDARD.md` al crear o extender módulos.
+
+## Resumen obligatorio
+
+- **Módulo** = nombre en inglés plural PascalCase (carpeta), ej. `VendingMachines`.
+- **Modelo** singular `final`, `strict_types`, relaciones tipadas, `casts()`, sin lógica pesada.
+- **Filament (panel admin)**: `App\Filament\Admin\Resources\{Modulo}\{Model}Resource.php`; CRUD por defecto con **`php artisan make:filament-resource ... --simple --panel=admin`** (modales). Widgets en `App\Filament\Admin\Widgets\{Modulo}\`.
+- **Policy** una por modelo expuesto en panel; autorizar acciones en el recurso.
+- **Servicios** `final` en `App\Services\{Modulo}\`; recursos Filament delgados.
+- **UI strings** (navigation labels, model labels, form copy) en **inglés** para el panel admin (cliente US); código e identificadores en inglés.
+- **Tests** en `tests/Feature/Filament/{Modulo}/`; factory del modelo principal.
+- Tras PHP: `vendor/bin/pint --dirty --format agent`.
+
+No introducir una segunda convención de carpetas o nombres si ya existe una en el repo; ampliar `docs/MODULE_STANDARD.md` si hace falta un caso nuevo acordado.
