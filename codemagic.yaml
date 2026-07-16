@@ -1,0 +1,32 @@
+workflows:
+  vmfs-android-apk:
+    name: VMFS Cloud Android APK
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    environment:
+      flutter: stable
+      vars:
+        API_BASE_URL: "https://cloud.vmfsusa.com/api/mobile/v1"
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+
+    scripts:
+      - name: Install dependencies
+        script: |
+          flutter pub get
+
+      - name: Build release APK
+        script: |
+          flutter build apk --release \
+            --dart-define=API_BASE_URL=$API_BASE_URL
+
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+      - build/app/outputs/flutter-apk/*.apk.sha1
