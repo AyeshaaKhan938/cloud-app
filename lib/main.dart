@@ -13,15 +13,18 @@ void main() {
 class VmfsCloudApp extends ConsumerWidget {
   const VmfsCloudApp({super.key});
 
+  static final _theme = VmfsTheme.light();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(appRouterProvider);
-
     return MaterialApp.router(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
-      theme: VmfsTheme.light(),
-      routerConfig: router,
+      theme: _theme,
+      routerConfig: ref.watch(appRouterProvider),
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        physics: const ClampingScrollPhysics(),
+      ),
     );
   }
 }

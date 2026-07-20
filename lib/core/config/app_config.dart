@@ -1,8 +1,8 @@
 class AppConfig {
   static const String appName = 'VMFS USA';
   static const String appTagline = 'Cloud operations on the go';
-  static const String appVersion = '1.0.1';
-  static const int buildNumber = 2;
+  static const String appVersion = '1.0.2';
+  static const int buildNumber = 3;
 
   /// Production API base. Override with --dart-define=API_BASE_URL=...
   static const String apiBaseUrl = String.fromEnvironment(
@@ -10,6 +10,6 @@ class AppConfig {
     defaultValue: 'https://cloud.vmfsusa.com/api/mobile/v1',
   );
 
-  static const Duration connectTimeout = Duration(seconds: 25);
-  static const Duration receiveTimeout = Duration(seconds: 35);
+  static const Duration connectTimeout = Duration(seconds: 15);
+  static const Duration receiveTimeout = Duration(seconds: 25);
 }

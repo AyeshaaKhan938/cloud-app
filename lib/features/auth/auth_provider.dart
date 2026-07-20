@@ -32,6 +32,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> _bootstrap() async {
     try {
+      await _repository.warmSession();
       final user = await _repository.restoreSession();
       state = AuthState(user: user, isLoading: false);
     } catch (e) {

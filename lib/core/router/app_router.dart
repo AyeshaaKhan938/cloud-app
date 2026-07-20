@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/widgets/vmfs_widgets.dart';
 import '../../features/auth/auth_provider.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/machines/machines_screen.dart';
@@ -11,18 +12,26 @@ import '../../features/shell/app_shell.dart';
 import '../../features/support/support_ticket_detail_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final auth = ref.watch(authProvider);
+  final refresh = _AuthRefreshListenable(ref);
+  ref.onDispose(refresh.dispose);
 
   return GoRouter(
     initialLocation: '/',
-    refreshListenable: _AuthRefreshListenable(ref),
+    refreshListenable: refresh,
     redirect: (context, state) {
+      final auth = ref.read(authProvider);
+      final location = state.matchedLocation;
       final isLoading = auth.isLoading;
       final isLoggedIn = auth.isAuthenticated;
-      final onLogin = state.matchedLocation == '/login';
+      final onLogin = location == '/login';
+      final onLoading = location == '/loading';
 
       if (isLoading) {
-        return null;
+        return onLoading ? null : '/loading';
+      }
+
+      if (onLoading) {
+        return isLoggedIn ? '/' : '/login';
       }
 
       if (!isLoggedIn && !onLogin) {
@@ -36,6 +45,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/loading',
+        builder: (_, __) => const Scaffold(body: VmfsLoadingView()),
+      ),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/', builder: (_, __) => const AppShell()),
       GoRoute(

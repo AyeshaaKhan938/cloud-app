@@ -4,13 +4,17 @@ import 'package:intl/intl.dart';
 
 import '../../core/theme/vmfs_colors.dart';
 import '../../core/widgets/vmfs_widgets.dart';
-import '../../data/vmfs_repository.dart';
-import '../auth/auth_provider.dart';
 import '../../models/dashboard.dart';
 import '../auth/auth_provider.dart';
 
 final dashboardProvider = FutureProvider<DashboardStats>((ref) async {
-  return ref.watch(repositoryProvider).fetchDashboard();
+  ref.keepAlive();
+  final auth = ref.watch(authProvider.select((state) => state.isAuthenticated));
+  if (!auth) {
+    throw Exception('Not signed in.');
+  }
+
+  return ref.read(repositoryProvider).fetchDashboard();
 });
 
 class DashboardScreen extends ConsumerWidget {
@@ -18,7 +22,7 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final auth = ref.watch(authProvider);
+    final userName = ref.watch(authProvider.select((state) => state.user?.name));
     final dashboard = ref.watch(dashboardProvider);
     final currency = NumberFormat.simpleCurrency();
 
@@ -33,7 +37,7 @@ class DashboardScreen extends ConsumerWidget {
             children: [
               VmfsHeroBanner(
                 kicker: stats.greeting,
-                title: auth.user?.name ?? 'VMFS Cloud',
+                title: userName ?? 'VMFS Cloud',
                 subtitle: '${stats.roleLabel} · ${DateFormat('EEEE, MMM d').format(DateTime.now())}',
                 trailing: Chip(label: Text(stats.roleLabel)),
               ),
@@ -45,6 +49,8 @@ class DashboardScreen extends ConsumerWidget {
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
                 childAspectRatio: 1.35,
+                addAutomaticKeepAlives: false,
+                addRepaintBoundaries: true,
                 children: [
                   VmfsStatCard(
                     label: 'Machines',

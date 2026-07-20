@@ -9,8 +9,11 @@ import '../../data/vmfs_repository.dart';
 import '../auth/auth_provider.dart';
 import '../../models/machine.dart';
 
-final machinesProvider = FutureProvider.autoDispose.family<List<MachineSummary>, String>((ref, search) async {
-  return ref.watch(repositoryProvider).fetchMachines(search: search);
+final machinesProvider = FutureProvider.family<List<MachineSummary>, String>((ref, search) async {
+  if (search.isEmpty) {
+    ref.keepAlive();
+  }
+  return ref.read(repositoryProvider).fetchMachines(search: search);
 });
 
 class MachinesScreen extends ConsumerStatefulWidget {
@@ -65,12 +68,14 @@ class _MachinesScreenState extends ConsumerState<MachinesScreen> {
                 onRefresh: () async => ref.invalidate(machinesProvider(_search)),
                 child: ListView.separated(
                   padding: const EdgeInsets.all(16),
+                  cacheExtent: 400,
                   itemCount: items.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final machine = items[index];
-                    return Card(
-                      child: ListTile(
+                    return RepaintBoundary(
+                      child: Card(
+                        child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         leading: CircleAvatar(
                           backgroundColor: VmfsColors.primaryLight,
@@ -87,6 +92,7 @@ class _MachinesScreenState extends ConsumerState<MachinesScreen> {
                         ),
                         onTap: () => context.push('/machines/${machine.id}'),
                       ),
+                    ),
                     );
                   },
                 ),

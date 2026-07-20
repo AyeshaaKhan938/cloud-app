@@ -9,7 +9,8 @@ import '../auth/auth_provider.dart';
 import '../../models/order.dart';
 
 final ordersProvider = FutureProvider<List<OrderSummary>>((ref) async {
-  return ref.watch(repositoryProvider).fetchOrders();
+  ref.keepAlive();
+  return ref.read(repositoryProvider).fetchOrders();
 });
 
 class OrdersScreen extends ConsumerWidget {
@@ -35,17 +36,20 @@ class OrdersScreen extends ConsumerWidget {
           onRefresh: () async => ref.invalidate(ordersProvider),
           child: ListView.separated(
             padding: const EdgeInsets.all(16),
+            cacheExtent: 400,
             itemCount: items.length,
             separatorBuilder: (_, __) => const SizedBox(height: 10),
             itemBuilder: (context, index) {
               final order = items[index];
-              return Card(
-                child: ListTile(
+              return RepaintBoundary(
+                child: Card(
+                  child: ListTile(
                   title: Text(order.productName, style: const TextStyle(fontWeight: FontWeight.w700)),
                   subtitle: Text('Machine ${order.machineNo} · ${order.createdAt}'),
                   trailing: Text(currency.format(order.amount), style: const TextStyle(fontWeight: FontWeight.w700)),
                   onTap: () => context.push('/orders/${order.id}'),
                 ),
+              ),
               );
             },
           ),

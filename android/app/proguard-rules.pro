@@ -9,3 +9,6 @@
 # Dio / OkHttp (used by Flutter Android engine networking)
 -dontwarn okhttp3.**
 -dontwarn okio.**
+
+# Optional Play Core references from Flutter deferred components (not used in this app)
+-dontwarn com.google.android.play.core.**

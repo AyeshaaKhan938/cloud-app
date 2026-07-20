@@ -20,8 +20,7 @@ class MenuHubScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final auth = ref.watch(authProvider);
-    final user = auth.user;
+    final user = ref.watch(authProvider.select((state) => state.user));
     final currency = NumberFormat.simpleCurrency();
 
     bool can(String feature) => user?.canAccess(feature) ?? false;

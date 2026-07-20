@@ -27,7 +27,25 @@ class ApiClient {
           }
           handler.next(options);
         },
-        onError: (error, handler) {
+        onError: (error, handler) async {
+          final isUnauthorized = error.response?.statusCode == 401;
+          final alreadyRetried = error.requestOptions.extra['auth_retry'] == true;
+
+          if (isUnauthorized && !alreadyRetried) {
+            final token = await _tokenStorage.readToken();
+            if (token != null && token.isNotEmpty) {
+              final options = error.requestOptions;
+              options.extra['auth_retry'] = true;
+              options.headers['Authorization'] = 'Bearer $token';
+              try {
+                final response = await _dio.fetch<Map<String, dynamic>>(options);
+                return handler.resolve(response);
+              } on DioException catch (retryError) {
+                return handler.next(retryError);
+              }
+            }
+          }
+
           handler.next(error);
         },
       ),
@@ -36,6 +54,8 @@ class ApiClient {
 
   final Dio _dio;
   final TokenStorage _tokenStorage;
+
+  Future<void> warmAuthHeader() => _tokenStorage.readToken();
 
   Future<Map<String, dynamic>> get(String path, {Map<String, dynamic>? query}) async {
     try {

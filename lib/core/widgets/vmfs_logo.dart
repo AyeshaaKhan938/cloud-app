@@ -21,12 +21,18 @@ class VmfsLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pixelRatio = MediaQuery.devicePixelRatioOf(context);
+    final cacheSize = (height * pixelRatio).round();
+
     if (compact) {
       return Image.asset(
         assetPath,
         height: height,
         width: height,
         fit: BoxFit.contain,
+        cacheWidth: cacheSize,
+        cacheHeight: cacheSize,
+        filterQuality: FilterQuality.medium,
         errorBuilder: (_, __, ___) => _fallbackIcon(height),
       );
     }
@@ -38,6 +44,8 @@ class VmfsLogo extends StatelessWidget {
           assetPath,
           height: height,
           fit: BoxFit.contain,
+          cacheWidth: cacheSize,
+          filterQuality: FilterQuality.medium,
           errorBuilder: (_, __, ___) => _fallbackIcon(height),
         ),
         if (showTitle) ...[

@@ -51,7 +51,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = ref.watch(authProvider);
+    final isLoading = ref.watch(authProvider.select((state) => state.isLoading));
+    final error = ref.watch(authProvider.select((state) => state.error));
 
     return Scaffold(
       body: SafeArea(
@@ -108,14 +109,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ],
                       ),
                     ),
-                    if (auth.error != null) ...[
+                    if (error != null) ...[
                       const SizedBox(height: 12),
-                      Text(auth.error!, style: const TextStyle(color: VmfsColors.danger)),
+                      Text(error, style: const TextStyle(color: VmfsColors.danger)),
                     ],
                     const SizedBox(height: 20),
                     ElevatedButton(
-                      onPressed: auth.isLoading ? null : _submit,
-                      child: auth.isLoading
+                      onPressed: isLoading ? null : _submit,
+                      child: isLoading
                           ? const SizedBox(
                               width: 22,
                               height: 22,

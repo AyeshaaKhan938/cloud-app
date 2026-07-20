@@ -10,8 +10,11 @@ import '../../data/vmfs_repository.dart';
 import '../auth/auth_provider.dart';
 import '../../models/product.dart';
 
-final productsProvider = FutureProvider.autoDispose.family<List<ProductSummary>, String>((ref, search) async {
-  return ref.watch(repositoryProvider).fetchProducts(search: search);
+final productsProvider = FutureProvider.family<List<ProductSummary>, String>((ref, search) async {
+  if (search.isEmpty) {
+    ref.keepAlive();
+  }
+  return ref.read(repositoryProvider).fetchProducts(search: search);
 });
 
 class ProductsScreen extends ConsumerStatefulWidget {
@@ -67,12 +70,14 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                 onRefresh: () async => ref.invalidate(productsProvider(_search)),
                 child: ListView.separated(
                   padding: const EdgeInsets.all(16),
+                  cacheExtent: 400,
                   itemCount: items.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final product = items[index];
-                    return Card(
-                      child: ListTile(
+                    return RepaintBoundary(
+                      child: Card(
+                        child: ListTile(
                         leading: const CircleAvatar(
                           backgroundColor: VmfsColors.primaryLight,
                           child: Icon(Icons.shopping_bag_outlined, color: VmfsColors.primaryDark),
@@ -92,6 +97,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                         ),
                         onTap: () => context.push('/products/${product.id}'),
                       ),
+                    ),
                     );
                   },
                 ),

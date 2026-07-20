@@ -7,10 +7,27 @@ class TokenStorage {
   static const _tokenKey = 'vmfs_auth_token';
 
   final FlutterSecureStorage _storage;
+  String? _memoryToken;
 
-  Future<void> saveToken(String token) => _storage.write(key: _tokenKey, value: token);
+  Future<void> saveToken(String token) async {
+    _memoryToken = token;
+    await _storage.write(key: _tokenKey, value: token);
+  }
 
-  Future<String?> readToken() => _storage.read(key: _tokenKey);
+  Future<String?> readToken() async {
+    if (_memoryToken != null && _memoryToken!.isNotEmpty) {
+      return _memoryToken;
+    }
 
-  Future<void> clearToken() => _storage.delete(key: _tokenKey);
+    final token = await _storage.read(key: _tokenKey);
+    if (token != null && token.isNotEmpty) {
+      _memoryToken = token;
+    }
+    return token;
+  }
+
+  Future<void> clearToken() async {
+    _memoryToken = null;
+    await _storage.delete(key: _tokenKey);
+  }
 }

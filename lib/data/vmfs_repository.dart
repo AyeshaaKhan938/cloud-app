@@ -12,11 +12,14 @@ class VmfsRepository {
   VmfsRepository({
     ApiClient? apiClient,
     TokenStorage? tokenStorage,
-  })  : _api = apiClient ?? ApiClient(),
-        _tokenStorage = tokenStorage ?? TokenStorage();
+  }) : _tokenStorage = tokenStorage ?? TokenStorage() {
+    _api = apiClient ?? ApiClient(tokenStorage: _tokenStorage);
+  }
 
-  final ApiClient _api;
+  late final ApiClient _api;
   final TokenStorage _tokenStorage;
+
+  Future<void> warmSession() => _api.warmAuthHeader();
 
   Future<AuthUser> login({required String email, required String password}) async {
     final data = await _api.post('/auth/login', body: {

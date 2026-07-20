@@ -17,7 +17,6 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _index = 0;
-  final Set<int> _loadedTabs = {0};
   final List<Widget?> _tabs = List<Widget?>.filled(5, null);
 
   static const _tabsMeta = [
@@ -40,10 +39,8 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _onTabSelected(int index) {
-    setState(() {
-      _loadedTabs.add(index);
-      _index = index;
-    });
+    if (_index == index) return;
+    setState(() => _index = index);
   }
 
   @override
@@ -61,13 +58,7 @@ class _AppShellState extends State<AppShell> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _index,
-        children: List.generate(
-          _tabsMeta.length,
-          (index) => _loadedTabs.contains(index) ? _tabWidget(index) : const SizedBox.shrink(),
-        ),
-      ),
+      body: _tabWidget(_index),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: _onTabSelected,
