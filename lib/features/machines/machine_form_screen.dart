@@ -4,8 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/network/api_exception.dart';
 import '../../core/widgets/vmfs_widgets.dart';
-import '../../data/vmfs_repository.dart';
 import '../../models/machine.dart';
+import '../auth/auth_provider.dart';
 
 class MachineFormScreen extends ConsumerStatefulWidget {
   const MachineFormScreen({super.key, this.machineId});

@@ -44,7 +44,7 @@ class VmfsCrudScreen extends ConsumerStatefulWidget {
   });
 
   final String title;
-  final ProviderListenable<AsyncValue<List<Map<String, dynamic>>>> provider;
+  final FutureProvider<List<Map<String, dynamic>>> provider;
   final String emptyTitle;
   final List<VmfsCrudField> fields;
   final bool canManage;
