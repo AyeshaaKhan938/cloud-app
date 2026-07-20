@@ -38,17 +38,32 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
   Widget build(BuildContext context) {
     final products = ref.watch(productsProvider(_search));
     final currency = NumberFormat.simpleCurrency();
+    final canCreate = ref.watch(authProvider.select((s) => s.user?.canAccess('products') ?? false));
 
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: TextField(
-            decoration: const InputDecoration(
-              hintText: 'Search products...',
-              prefixIcon: Icon(Icons.search),
-            ),
-            onChanged: (v) => _debouncer.run(() => setState(() => _search = v.trim())),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: const InputDecoration(
+                    hintText: 'Search products...',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                  onChanged: (v) => _debouncer.run(() => setState(() => _search = v.trim())),
+                ),
+              ),
+              if (canCreate) ...[
+                const SizedBox(width: 8),
+                IconButton.filled(
+                  tooltip: 'Add product',
+                  onPressed: () => context.push('/products/new'),
+                  icon: const Icon(Icons.add),
+                ),
+              ],
+            ],
           ),
         ),
         Expanded(

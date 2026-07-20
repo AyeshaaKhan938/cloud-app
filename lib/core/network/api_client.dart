@@ -5,8 +5,10 @@ import '../storage/token_storage.dart';
 import 'api_exception.dart';
 
 class ApiClient {
-  ApiClient({TokenStorage? tokenStorage})
-      : _tokenStorage = tokenStorage ?? TokenStorage(),
+  ApiClient({
+    TokenStorage? tokenStorage,
+    this.onUnauthorized,
+  })  : _tokenStorage = tokenStorage ?? TokenStorage(),
         _dio = Dio(
           BaseOptions(
             baseUrl: AppConfig.apiBaseUrl,
@@ -32,6 +34,7 @@ class ApiClient {
           final alreadyRetried = error.requestOptions.extra['auth_retry'] == true;
 
           if (isUnauthorized && !alreadyRetried) {
+            await _tokenStorage.readToken();
             final token = await _tokenStorage.readToken();
             if (token != null && token.isNotEmpty) {
               final options = error.requestOptions;
@@ -41,9 +44,18 @@ class ApiClient {
                 final response = await _dio.fetch<Map<String, dynamic>>(options);
                 return handler.resolve(response);
               } on DioException catch (retryError) {
+                if (retryError.response?.statusCode == 401) {
+                  await _tokenStorage.clearToken();
+                  onUnauthorized?.call();
+                }
                 return handler.next(retryError);
               }
             }
+          }
+
+          if (isUnauthorized) {
+            await _tokenStorage.clearToken();
+            onUnauthorized?.call();
           }
 
           handler.next(error);
@@ -54,6 +66,7 @@ class ApiClient {
 
   final Dio _dio;
   final TokenStorage _tokenStorage;
+  final void Function()? onUnauthorized;
 
   Future<void> warmAuthHeader() => _tokenStorage.readToken();
 
@@ -130,6 +143,10 @@ class ApiClient {
       message = 'Cannot reach VMFS Cloud. Check your connection.';
     }
 
-    return ApiException(message, statusCode: response?.statusCode, errors: fieldErrors);
+    return ApiException(
+      message,
+      statusCode: response?.statusCode,
+      errors: fieldErrors,
+    );
   }
 }

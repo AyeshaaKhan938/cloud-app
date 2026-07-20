@@ -57,8 +57,11 @@ class ProductDetail {
   const ProductDetail({
     required this.summary,
     required this.description,
+    required this.barcode,
     required this.categoryName,
     required this.tagName,
+    required this.specificationId,
+    required this.productTagId,
     required this.cost,
     required this.requiresAgeVerification,
     required this.deployments,
@@ -70,8 +73,11 @@ class ProductDetail {
     return ProductDetail(
       summary: ProductSummary.fromJson(productJson),
       description: productJson['description'] as String? ?? '',
+      barcode: productJson['barcode'] as String? ?? '',
       categoryName: productJson['category_name'] as String? ?? '—',
       tagName: productJson['tag_name'] as String? ?? '—',
+      specificationId: productJson['specification_id'] as int?,
+      productTagId: productJson['product_tag_id'] as int?,
       cost: (productJson['cost'] as num?)?.toDouble() ?? 0,
       requiresAgeVerification: productJson['requires_age_verification'] as bool? ?? false,
       deployments: (json['deployments'] as List<dynamic>? ?? [])
@@ -85,8 +91,11 @@ class ProductDetail {
 
   final ProductSummary summary;
   final String description;
+  final String barcode;
   final String categoryName;
   final String tagName;
+  final int? specificationId;
+  final int? productTagId;
   final double cost;
   final bool requiresAgeVerification;
   final List<ProductDeployment> deployments;

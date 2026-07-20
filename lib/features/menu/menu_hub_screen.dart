@@ -12,6 +12,7 @@ import '../advertising/advertising_screens.dart';
 import '../catalog/catalog_screens.dart';
 import '../coupons/coupons_screens.dart';
 import '../reports/reports_screen.dart';
+import '../profile/profile_screen.dart';
 import '../team/team_screen.dart';
 import '../wallet/wallet_screen.dart';
 
@@ -167,6 +168,13 @@ class MenuHubScreen extends ConsumerWidget {
         _Section(
           title: 'Account',
           children: [
+            _MenuTile(
+              icon: Icons.person_outline,
+              title: 'Profile & password',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const ProfileScreen()),
+              ),
+            ),
             _MenuTile(
               icon: Icons.groups_outlined,
               title: 'Team members',

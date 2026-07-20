@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/vmfs_colors.dart';
+import '../../core/widgets/vmfs_crud_screen.dart';
 import '../../core/widgets/vmfs_resource_list.dart';
 import '../../core/widgets/vmfs_widgets.dart';
+import '../../data/vmfs_repository.dart';
 import '../auth/auth_provider.dart';
 
 final machineGroupsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
@@ -35,25 +37,20 @@ class MachineGroupsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(machineGroupsProvider);
+    final canManage = ref.watch(authProvider.select((s) => s.user?.canAccess('machines_view') ?? false));
+    final repo = ref.read(repositoryProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Machine groups')),
-      body: items.when(
-        loading: () => const VmfsLoadingView(),
-        error: (e, _) => VmfsErrorView(message: e.toString(), onRetry: () => ref.invalidate(machineGroupsProvider)),
-        data: (list) => buildVmfsResourceList(
-          list: list,
-          onRefresh: () async => ref.invalidate(machineGroupsProvider),
-          emptyTitle: 'No machine groups',
-          itemBuilder: (item) => Card(
-            child: ListTile(
-              title: Text(item['name'] as String? ?? 'Group'),
-              trailing: Text('${item['machine_count'] ?? 0} machines'),
-            ),
-          ),
-        ),
-      ),
+    return VmfsCrudScreen(
+      title: 'Machine groups',
+      provider: machineGroupsProvider,
+      emptyTitle: 'No machine groups',
+      canManage: canManage,
+      fields: const [VmfsCrudField(key: 'name', label: 'Group name', required: true)],
+      itemTitle: (item) => item['name'] as String? ?? 'Group',
+      itemSubtitle: (item) => '${item['machine_count'] ?? 0} machines',
+      onCreate: repo.createMachineGroup,
+      onUpdate: repo.updateMachineGroup,
+      onDelete: repo.deleteMachineGroup,
     );
   }
 }
@@ -78,11 +75,7 @@ class MachineAlarmsScreen extends ConsumerWidget {
             child: ListTile(
               title: Text(item['title'] as String? ?? 'Alarm'),
               subtitle: Text('${item['machine_name'] ?? ''}\n${item['message'] ?? ''}'),
-              isThreeLine: true,
-              trailing: VmfsStatusPill(
-                label: item['severity'] as String? ?? 'alert',
-                color: VmfsColors.danger,
-              ),
+              trailing: Text(item['severity']?.toString() ?? ''),
             ),
           ),
         ),
@@ -103,43 +96,24 @@ class MachineMapScreen extends ConsumerWidget {
       body: items.when(
         loading: () => const VmfsLoadingView(),
         error: (e, _) => VmfsErrorView(message: e.toString(), onRetry: () => ref.invalidate(machineMapProvider)),
-        data: (list) {
-          if (list.isEmpty) {
-            return const VmfsEmptyState(
-              title: 'No map data',
-              message: 'Machines need latitude/longitude set on the web panel.',
-            );
-          }
-
-          return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(machineMapProvider),
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: list.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                final item = list[index];
-                final lat = (item['latitude'] as num?)?.toDouble();
-                final lng = (item['longitude'] as num?)?.toDouble();
-                final online = item['is_online'] as bool? ?? false;
-
-                return Card(
-                  child: ListTile(
-                    title: Text(item['machine_name'] as String? ?? 'Machine'),
-                    subtitle: Text(
-                      '#${item['machine_number']}\n${item['detailed_address'] ?? ''}\n$lat, $lng',
-                    ),
-                    isThreeLine: true,
-                    trailing: VmfsStatusPill(
-                      label: online ? 'Online' : 'Offline',
-                      color: online ? VmfsColors.success : VmfsColors.textSecondary,
-                    ),
-                  ),
-                );
-              },
+        data: (list) => buildVmfsResourceList(
+          list: list,
+          onRefresh: () async => ref.invalidate(machineMapProvider),
+          emptyTitle: 'No mapped machines',
+          emptyMessage: 'Add latitude and longitude on machines to see them here.',
+          itemBuilder: (item) => Card(
+            child: ListTile(
+              title: Text(item['machine_name'] as String? ?? 'Machine'),
+              subtitle: Text(
+                '${item['detailed_address'] ?? ''}\n${item['latitude']}, ${item['longitude']}',
+              ),
+              trailing: VmfsStatusPill(
+                label: (item['is_online'] as bool? ?? false) ? 'Online' : 'Offline',
+                color: (item['is_online'] as bool? ?? false) ? VmfsColors.success : VmfsColors.textSecondary,
+              ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
@@ -150,20 +124,23 @@ class ProductCategoriesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(productCategoriesProvider);
+    final canManage = ref.watch(authProvider.select((s) => s.user?.canAccess('products') ?? false));
+    final repo = ref.read(repositoryProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Categories')),
-      body: items.when(
-        loading: () => const VmfsLoadingView(),
-        error: (e, _) => VmfsErrorView(message: e.toString(), onRetry: () => ref.invalidate(productCategoriesProvider)),
-        data: (list) => buildVmfsResourceList(
-          list: list,
-          onRefresh: () async => ref.invalidate(productCategoriesProvider),
-          emptyTitle: 'No categories',
-          itemBuilder: (item) => Card(child: ListTile(title: Text(item['name'] as String? ?? 'Category'))),
-        ),
-      ),
+    return VmfsCrudScreen(
+      title: 'Categories',
+      provider: productCategoriesProvider,
+      emptyTitle: 'No categories',
+      canManage: canManage,
+      fields: const [
+        VmfsCrudField(key: 'name', label: 'Category name', required: true),
+        VmfsCrudField(key: 'value', label: 'Value'),
+      ],
+      itemTitle: (item) => item['name'] as String? ?? 'Category',
+      itemSubtitle: (item) => item['value']?.toString() ?? '—',
+      onCreate: repo.createProductCategory,
+      onUpdate: repo.updateProductCategory,
+      onDelete: repo.deleteProductCategory,
     );
   }
 }
@@ -173,20 +150,20 @@ class ProductTagsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(productTagsProvider);
+    final canManage = ref.watch(authProvider.select((s) => s.user?.canAccess('products') ?? false));
+    final repo = ref.read(repositoryProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Product tags')),
-      body: items.when(
-        loading: () => const VmfsLoadingView(),
-        error: (e, _) => VmfsErrorView(message: e.toString(), onRetry: () => ref.invalidate(productTagsProvider)),
-        data: (list) => buildVmfsResourceList(
-          list: list,
-          onRefresh: () async => ref.invalidate(productTagsProvider),
-          emptyTitle: 'No product tags',
-          itemBuilder: (item) => Card(child: ListTile(title: Text(item['name'] as String? ?? 'Tag'))),
-        ),
-      ),
+    return VmfsCrudScreen(
+      title: 'Product tags',
+      provider: productTagsProvider,
+      emptyTitle: 'No tags',
+      canManage: canManage,
+      fields: const [VmfsCrudField(key: 'name', label: 'Tag name', required: true)],
+      itemTitle: (item) => item['name'] as String? ?? 'Tag',
+      itemSubtitle: (_) => 'Product tag',
+      onCreate: repo.createProductTag,
+      onUpdate: repo.updateProductTag,
+      onDelete: repo.deleteProductTag,
     );
   }
 }
@@ -196,20 +173,20 @@ class ProductTypesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(productTypesProvider);
+    final canManage = ref.watch(authProvider.select((s) => s.user?.canAccess('products') ?? false));
+    final repo = ref.read(repositoryProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Product types')),
-      body: items.when(
-        loading: () => const VmfsLoadingView(),
-        error: (e, _) => VmfsErrorView(message: e.toString(), onRetry: () => ref.invalidate(productTypesProvider)),
-        data: (list) => buildVmfsResourceList(
-          list: list,
-          onRefresh: () async => ref.invalidate(productTypesProvider),
-          emptyTitle: 'No product types',
-          itemBuilder: (item) => Card(child: ListTile(title: Text(item['name'] as String? ?? 'Type'))),
-        ),
-      ),
+    return VmfsCrudScreen(
+      title: 'Product types',
+      provider: productTypesProvider,
+      emptyTitle: 'No product types',
+      canManage: canManage,
+      fields: const [VmfsCrudField(key: 'name', label: 'Type name', required: true)],
+      itemTitle: (item) => item['name'] as String? ?? 'Type',
+      itemSubtitle: (_) => 'Specification type',
+      onCreate: repo.createProductType,
+      onUpdate: repo.updateProductType,
+      onDelete: repo.deleteProductType,
     );
   }
 }

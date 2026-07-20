@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/config/app_config.dart';
 import '../../core/legal/legal_content.dart';
 import '../../core/theme/vmfs_colors.dart';
-import '../../core/widgets/vmfs_logo.dart';
+import '../../core/widgets/vmfs_brand_panel.dart';
 import '../legal/help_screen.dart';
 import '../legal/legal_document_screen.dart';
 import 'auth_provider.dart';
@@ -21,6 +21,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscure = true;
+  bool _acceptedTerms = false;
 
   @override
   void dispose() {
@@ -31,6 +32,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
+    if (!_acceptedTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please accept the Terms & Privacy Policy to continue.')),
+      );
+      return;
+    }
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -65,15 +72,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: VmfsColors.primaryLight,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const VmfsLogo(height: 80, showTitle: true, showSubtitle: true),
-                    ),
-                    const SizedBox(height: 28),
+                    const VmfsLoginBrandPanel(),
+                    const SizedBox(height: 24),
                     Form(
                       key: _formKey,
                       child: Column(
@@ -109,11 +109,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ],
                       ),
                     ),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: _acceptedTerms,
+                      onChanged: (v) => setState(() => _acceptedTerms = v ?? false),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      title: Wrap(
+                        children: [
+                          const Text('I agree to the '),
+                          GestureDetector(
+                            onTap: () => _openLegal('Terms & conditions', LegalContent.termsOfService),
+                            child: const Text(
+                              'Terms',
+                              style: TextStyle(color: VmfsColors.primaryDark, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          const Text(' and '),
+                          GestureDetector(
+                            onTap: () => _openLegal('Privacy policy', LegalContent.privacyPolicy),
+                            child: const Text(
+                              'Privacy Policy',
+                              style: TextStyle(color: VmfsColors.primaryDark, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     if (error != null) ...[
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Text(error, style: const TextStyle(color: VmfsColors.danger)),
                     ],
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 12),
                     ElevatedButton(
                       onPressed: isLoading ? null : _submit,
                       child: isLoading
@@ -137,25 +163,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 12, color: VmfsColors.textSecondary),
                     ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 4,
-                      children: [
-                        TextButton(
-                          onPressed: () => _openLegal('Privacy policy', LegalContent.privacyPolicy),
-                          child: const Text('Privacy', style: TextStyle(fontSize: 12)),
-                        ),
-                        const Text('·', style: TextStyle(color: VmfsColors.textSecondary)),
-                        TextButton(
-                          onPressed: () => _openLegal('Terms of service', LegalContent.termsOfService),
-                          child: const Text('Terms', style: TextStyle(fontSize: 12)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Text(
-                      AppConfig.appVersion,
+                      'Version ${AppConfig.appVersion}',
                       textAlign: TextAlign.center,
                       style: const TextStyle(fontSize: 11, color: VmfsColors.textSecondary),
                     ),

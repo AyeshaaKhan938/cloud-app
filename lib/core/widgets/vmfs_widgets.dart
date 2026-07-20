@@ -9,12 +9,14 @@ class VmfsHeroBanner extends StatelessWidget {
     required this.title,
     required this.subtitle,
     this.trailing,
+    this.leading,
   });
 
   final String kicker;
   final String title;
   final String subtitle;
   final Widget? trailing;
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
@@ -33,15 +35,16 @@ class VmfsHeroBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: VmfsColors.primaryLight,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.memory_rounded, color: VmfsColors.primaryDark),
-          ),
+          leading ??
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: VmfsColors.primaryLight,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.memory_rounded, color: VmfsColors.primaryDark),
+              ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

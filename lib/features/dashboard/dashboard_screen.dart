@@ -2,19 +2,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/network/api_exception.dart';
 import '../../core/theme/vmfs_colors.dart';
+import '../../core/widgets/vmfs_logo.dart';
 import '../../core/widgets/vmfs_widgets.dart';
 import '../../models/dashboard.dart';
 import '../auth/auth_provider.dart';
 
-final dashboardProvider = FutureProvider<DashboardStats>((ref) async {
-  ref.keepAlive();
-  final auth = ref.watch(authProvider.select((state) => state.isAuthenticated));
-  if (!auth) {
-    throw Exception('Not signed in.');
+final dashboardProvider = FutureProvider.autoDispose<DashboardStats>((ref) async {
+  final auth = ref.read(authProvider);
+  if (!auth.sessionReady || !auth.isAuthenticated) {
+    throw Exception('Session is not ready.');
   }
 
-  return ref.read(repositoryProvider).fetchDashboard();
+  try {
+    return await ref.read(repositoryProvider).fetchDashboard();
+  } on ApiException catch (e) {
+    if (e.statusCode == 401) {
+      await ref.read(authProvider.notifier).handleUnauthorized();
+    }
+    rethrow;
+  }
 });
 
 class DashboardScreen extends ConsumerWidget {
@@ -22,13 +30,26 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userName = ref.watch(authProvider.select((state) => state.user?.name));
+    final auth = ref.watch(authProvider);
+    if (auth.isLoading || (auth.isAuthenticated && !auth.sessionReady)) {
+      return const VmfsLoadingView();
+    }
+
+    final userName = auth.user?.name;
     final dashboard = ref.watch(dashboardProvider);
     final currency = NumberFormat.simpleCurrency();
 
     return dashboard.when(
       loading: () => const VmfsLoadingView(),
-      error: (e, _) => VmfsErrorView(message: e.toString(), onRetry: () => ref.invalidate(dashboardProvider)),
+      error: (e, _) {
+        final message = e is ApiException && e.statusCode == 401
+            ? 'Session expired. Please sign in again.'
+            : e.toString();
+        return VmfsErrorView(
+          message: message,
+          onRetry: () => ref.invalidate(dashboardProvider),
+        );
+      },
       data: (stats) {
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(dashboardProvider),
@@ -40,6 +61,7 @@ class DashboardScreen extends ConsumerWidget {
                 title: userName ?? 'VMFS Cloud',
                 subtitle: '${stats.roleLabel} · ${DateFormat('EEEE, MMM d').format(DateTime.now())}',
                 trailing: Chip(label: Text(stats.roleLabel)),
+                leading: const VmfsLogo(height: 44, compact: true),
               ),
               const SizedBox(height: 16),
               GridView.count(

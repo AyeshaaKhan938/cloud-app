@@ -42,6 +42,16 @@ class MachineDetail extends MachineSummary {
     required this.groupName,
     required this.ownerAccount,
     required this.lastSeenAt,
+    required this.machineGroupId,
+    required this.financeGroupId,
+    required this.advertisementGroupId,
+    required this.machineScenario,
+    required this.serviceHotLine,
+    required this.ageVerificationEnabled,
+    required this.minimumAge,
+    required this.remarks,
+    required this.latitude,
+    required this.longitude,
     required this.slotSummary,
     required this.slots,
   });
@@ -62,6 +72,16 @@ class MachineDetail extends MachineSummary {
       groupName: summary['group_name'] as String? ?? '—',
       ownerAccount: summary['owner_account'] as String? ?? '—',
       lastSeenAt: summary['last_seen_at'] as String?,
+      machineGroupId: summary['machine_group_id'] as int?,
+      financeGroupId: summary['finance_group_id'] as int?,
+      advertisementGroupId: summary['advertisement_group_id'] as int?,
+      machineScenario: summary['machine_scenario'] as String?,
+      serviceHotLine: summary['service_hot_line'] as String?,
+      ageVerificationEnabled: summary['age_verification_enabled'] as bool? ?? false,
+      minimumAge: summary['minimum_age'] as int?,
+      remarks: summary['remarks'] as String?,
+      latitude: (summary['latitude'] as num?)?.toDouble(),
+      longitude: (summary['longitude'] as num?)?.toDouble(),
       slotSummary: SlotSummary.fromJson(slotSummary),
       slots: slotsJson.map((e) => MachineSlot.fromJson(e as Map<String, dynamic>)).toList(),
     );
@@ -70,6 +90,16 @@ class MachineDetail extends MachineSummary {
   final String groupName;
   final String ownerAccount;
   final String? lastSeenAt;
+  final int? machineGroupId;
+  final int? financeGroupId;
+  final int? advertisementGroupId;
+  final String? machineScenario;
+  final String? serviceHotLine;
+  final bool ageVerificationEnabled;
+  final int? minimumAge;
+  final String? remarks;
+  final double? latitude;
+  final double? longitude;
   final SlotSummary slotSummary;
   final List<MachineSlot> slots;
 }
@@ -104,10 +134,14 @@ class MachineSlot {
   const MachineSlot({
     required this.id,
     required this.lineNumber,
+    required this.productId,
     required this.productName,
     required this.currentStock,
     required this.maxStock,
+    required this.stockAlarmThreshold,
     required this.price,
+    required this.isActive,
+    required this.isFault,
     required this.status,
   });
 
@@ -115,19 +149,27 @@ class MachineSlot {
     return MachineSlot(
       id: json['id'] as int,
       lineNumber: json['line_number'] as int? ?? 0,
+      productId: json['product_id'] as int?,
       productName: json['product_name'] as String? ?? '— empty —',
       currentStock: json['current_stock'] as int? ?? 0,
       maxStock: json['max_stock'] as int? ?? 0,
+      stockAlarmThreshold: json['stock_alarm_threshold'] as int? ?? 0,
       price: (json['price'] as num?)?.toDouble() ?? 0,
+      isActive: json['is_active'] as bool? ?? true,
+      isFault: json['is_fault'] as bool? ?? false,
       status: json['status'] as String? ?? 'ok',
     );
   }
 
   final int id;
   final int lineNumber;
+  final int? productId;
   final String productName;
   final int currentStock;
   final int maxStock;
+  final int stockAlarmThreshold;
   final double price;
+  final bool isActive;
+  final bool isFault;
   final String status;
 }

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/vmfs_colors.dart';
-import '../../core/widgets/vmfs_resource_list.dart';
-import '../../core/widgets/vmfs_widgets.dart';
+import '../../core/widgets/vmfs_crud_screen.dart';
+import '../../data/vmfs_repository.dart';
 import '../auth/auth_provider.dart';
 
 final couponsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
@@ -20,30 +20,26 @@ class CouponsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(couponsProvider);
+    final canManage = ref.watch(authProvider.select((s) => s.user?.canAccess('products') ?? false));
+    final repo = ref.read(repositoryProvider);
     final currency = NumberFormat.simpleCurrency();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Coupons')),
-      body: items.when(
-        loading: () => const VmfsLoadingView(),
-        error: (e, _) => VmfsErrorView(message: e.toString(), onRetry: () => ref.invalidate(couponsProvider)),
-        data: (list) => buildVmfsResourceList(
-          list: list,
-          onRefresh: () async => ref.invalidate(couponsProvider),
-          emptyTitle: 'No coupons',
-          itemBuilder: (item) => Card(
-            child: ListTile(
-              title: Text(item['name'] as String? ?? 'Coupon'),
-              subtitle: Text('Min ${currency.format((item['purchase_amount'] as num?)?.toDouble() ?? 0)}'),
-              trailing: VmfsStatusPill(
-                label: '${item['code_count'] ?? 0} codes',
-                color: VmfsColors.info,
-              ),
-            ),
-          ),
-        ),
-      ),
+    return VmfsCrudScreen(
+      title: 'Coupons',
+      provider: couponsProvider,
+      emptyTitle: 'No coupons',
+      canManage: canManage,
+      fields: const [
+        VmfsCrudField(key: 'name', label: 'Coupon name', required: true),
+        VmfsCrudField(key: 'coupon_type', label: 'Type (fixed_amount/percentage)', initialValue: 'fixed_amount'),
+        VmfsCrudField(key: 'discount_value', label: 'Discount value', required: true, keyboardType: TextInputType.number),
+      ],
+      itemTitle: (item) => item['name'] as String? ?? 'Coupon',
+      itemSubtitle: (item) => 'Min ${currency.format((item['purchase_amount'] as num?)?.toDouble() ?? 0)}',
+      itemTrailing: (item) => '${item['code_count'] ?? 0} codes',
+      onCreate: repo.createCoupon,
+      onUpdate: repo.updateCoupon,
+      onDelete: repo.deleteCoupon,
     );
   }
 }
@@ -53,32 +49,25 @@ class LotteriesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(lotteriesProvider);
+    final canManage = ref.watch(authProvider.select((s) => s.user?.canAccess('products') ?? false));
+    final repo = ref.read(repositoryProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Lotteries')),
-      body: items.when(
-        loading: () => const VmfsLoadingView(),
-        error: (e, _) => VmfsErrorView(message: e.toString(), onRetry: () => ref.invalidate(lotteriesProvider)),
-        data: (list) => buildVmfsResourceList(
-          list: list,
-          onRefresh: () async => ref.invalidate(lotteriesProvider),
-          emptyTitle: 'No lotteries',
-          itemBuilder: (item) {
-            final active = item['is_active'] as bool? ?? false;
-            return Card(
-              child: ListTile(
-                title: Text(item['name'] as String? ?? 'Lottery'),
-                subtitle: Text('${item['product_name'] ?? ''} · Machine ${item['machine_no'] ?? ''}'),
-                trailing: VmfsStatusPill(
-                  label: active ? 'Active' : 'Inactive',
-                  color: active ? VmfsColors.success : VmfsColors.textSecondary,
-                ),
-              ),
-            );
-          },
-        ),
-      ),
+    return VmfsCrudScreen(
+      title: 'Lotteries',
+      provider: lotteriesProvider,
+      emptyTitle: 'No lotteries',
+      canManage: canManage,
+      fields: const [
+        VmfsCrudField(key: 'name', label: 'Lottery name', required: true),
+        VmfsCrudField(key: 'product_id', label: 'Product ID', required: true, keyboardType: TextInputType.number),
+        VmfsCrudField(key: 'machine_no', label: 'Machine number'),
+      ],
+      itemTitle: (item) => item['name'] as String? ?? 'Lottery',
+      itemSubtitle: (item) => '${item['product_name'] ?? ''} · Machine ${item['machine_no'] ?? ''}',
+      itemTrailing: (item) => (item['is_active'] as bool? ?? false) ? 'Active' : 'Inactive',
+      onCreate: repo.createLottery,
+      onUpdate: repo.updateLottery,
+      onDelete: repo.deleteLottery,
     );
   }
 }

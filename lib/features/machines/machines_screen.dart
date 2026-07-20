@@ -36,17 +36,32 @@ class _MachinesScreenState extends ConsumerState<MachinesScreen> {
   @override
   Widget build(BuildContext context) {
     final machines = ref.watch(machinesProvider(_search));
+    final canCreate = ref.watch(authProvider.select((s) => s.user?.canAccess('machines_create') ?? false));
 
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: TextField(
-            decoration: const InputDecoration(
-              hintText: 'Search machines...',
-              prefixIcon: Icon(Icons.search),
-            ),
-            onChanged: (v) => _debouncer.run(() => setState(() => _search = v.trim())),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  decoration: const InputDecoration(
+                    hintText: 'Search machines...',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                  onChanged: (v) => _debouncer.run(() => setState(() => _search = v.trim())),
+                ),
+              ),
+              if (canCreate) ...[
+                const SizedBox(width: 8),
+                IconButton.filled(
+                  tooltip: 'Add machine',
+                  onPressed: () => context.push('/machines/new'),
+                  icon: const Icon(Icons.add),
+                ),
+              ],
+            ],
           ),
         ),
         Expanded(
@@ -117,9 +132,34 @@ class MachineDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final detail = ref.watch(machineDetailProvider(machineId));
+    final user = ref.watch(authProvider.select((s) => s.user));
+    final canEdit = user?.canAccess('machines_create') == true || user?.canAccess('machine_slots') == true;
+    final canManageSlots = user?.canAccess('machine_slots') == true;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Machine')),
+      appBar: AppBar(
+        title: const Text('Machine'),
+        actions: [
+          if (canEdit)
+            IconButton(
+              tooltip: 'Edit machine',
+              onPressed: () async {
+                final changed = await context.push<bool>('/machines/$machineId/edit');
+                if (changed == true) ref.invalidate(machineDetailProvider(machineId));
+              },
+              icon: const Icon(Icons.edit_outlined),
+            ),
+          if (canManageSlots)
+            IconButton(
+              tooltip: 'Add slot',
+              onPressed: () async {
+                final changed = await context.push<bool>('/machines/$machineId/slots/new');
+                if (changed == true) ref.invalidate(machineDetailProvider(machineId));
+              },
+              icon: const Icon(Icons.add),
+            ),
+        ],
+      ),
       body: detail.when(
         loading: () => const VmfsLoadingView(),
         error: (e, _) => VmfsErrorView(
@@ -163,6 +203,14 @@ class MachineDetailScreen extends ConsumerWidget {
                     title: Text('Slot #${slot.lineNumber}'),
                     subtitle: Text('${slot.productName} · ${slot.currentStock}/${slot.maxStock}'),
                     trailing: Text('\$${slot.price.toStringAsFixed(2)}'),
+                    onTap: canManageSlots
+                        ? () async {
+                            final changed = await context.push<bool>(
+                              '/machines/$machineId/slots/${slot.id}/edit',
+                            );
+                            if (changed == true) ref.invalidate(machineDetailProvider(machineId));
+                          }
+                        : null,
                   ),
                 ),
               ),

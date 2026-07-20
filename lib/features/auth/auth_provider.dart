@@ -3,24 +3,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/vmfs_repository.dart';
 import '../../models/auth_user.dart';
 
-final repositoryProvider = Provider<VmfsRepository>((ref) => VmfsRepository());
+final repositoryProvider = Provider<VmfsRepository>((ref) {
+  return VmfsRepository(
+    onUnauthorized: () => ref.read(authProvider.notifier).handleUnauthorized(),
+  );
+});
 
 class AuthState {
-  const AuthState({this.user, this.isLoading = false, this.error});
+  const AuthState({
+    this.user,
+    this.isLoading = false,
+    this.sessionReady = false,
+    this.error,
+  });
 
   final AuthUser? user;
   final bool isLoading;
+  final bool sessionReady;
   final String? error;
 
   bool get isAuthenticated => user != null;
-
-  AuthState copyWith({AuthUser? user, bool? isLoading, String? error, bool clearError = false}) {
-    return AuthState(
-      user: user ?? this.user,
-      isLoading: isLoading ?? this.isLoading,
-      error: clearError ? null : (error ?? this.error),
-    );
-  }
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
@@ -34,17 +36,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _repository.warmSession();
       final user = await _repository.restoreSession();
-      state = AuthState(user: user, isLoading: false);
-    } catch (e) {
-      state = AuthState(isLoading: false, error: e.toString());
+      state = AuthState(
+        user: user,
+        isLoading: false,
+        sessionReady: user != null,
+      );
+    } catch (_) {
+      state = const AuthState(isLoading: false);
     }
   }
 
   Future<void> login(String email, String password) async {
-    state = state.copyWith(isLoading: true, clearError: true);
+    state = const AuthState(isLoading: true);
     try {
-      final user = await _repository.login(email: email, password: password);
-      state = AuthState(user: user, isLoading: false);
+      await _repository.login(email: email, password: password);
+      await _repository.warmSession();
+      final user = await _repository.restoreSession();
+      if (user == null) {
+        throw Exception('Session could not be established. Please try again.');
+      }
+      state = AuthState(user: user, isLoading: false, sessionReady: true);
     } catch (e) {
       state = AuthState(isLoading: false, error: e.toString());
     }
@@ -54,8 +65,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _repository.logout();
     state = const AuthState(isLoading: false);
   }
+
+  Future<void> handleUnauthorized() async {
+    await _repository.clearSession();
+    state = const AuthState(isLoading: false);
+  }
+
+  Future<void> refreshSession() async {
+    final user = await _repository.restoreSession();
+    state = AuthState(
+      user: user,
+      isLoading: false,
+      sessionReady: user != null,
+    );
+  }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+final StateNotifierProvider<AuthNotifier, AuthState> authProvider =
+    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   return AuthNotifier(ref.watch(repositoryProvider));
 });

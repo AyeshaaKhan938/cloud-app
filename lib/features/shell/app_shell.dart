@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../core/config/app_config.dart';
+import '../../core/widgets/vmfs_brand_panel.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../machines/machines_screen.dart';
 import '../menu/menu_hub_screen.dart';
@@ -47,7 +47,7 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppConfig.appName),
+        title: const VmfsAppBarTitle(),
         actions: [
           IconButton(
             onPressed: () => Navigator.of(context).push(

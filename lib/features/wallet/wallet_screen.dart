@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/network/api_exception.dart';
 import '../../core/widgets/vmfs_widgets.dart';
 import '../../data/vmfs_repository.dart';
 import '../auth/auth_provider.dart';
@@ -17,14 +18,62 @@ final rechargeRecordsProvider = FutureProvider<List<Map<String, dynamic>>>((ref)
 class WalletScreen extends ConsumerWidget {
   const WalletScreen({super.key});
 
+  Future<void> _recharge(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController(text: '100');
+    final amount = await showDialog<double>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Wallet top-up'),
+        content: TextField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(labelText: 'Amount (min \$100)'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, double.tryParse(controller.text.trim())),
+            child: const Text('Submit'),
+          ),
+        ],
+      ),
+    );
+    if (amount == null || !context.mounted) return;
+
+    try {
+      await ref.read(repositoryProvider).rechargeWallet(amount);
+      ref.invalidate(walletDetailProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Top-up request recorded.')),
+        );
+      }
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wallet = ref.watch(walletDetailProvider);
     final records = ref.watch(rechargeRecordsProvider);
     final currency = NumberFormat.simpleCurrency();
+    final canRecharge = ref.watch(authProvider.select((s) => s.user?.canAccess('wallet') ?? false));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Wallet')),
+      appBar: AppBar(
+        title: const Text('Wallet'),
+        actions: [
+          if (canRecharge)
+            IconButton(
+              tooltip: 'Top up',
+              onPressed: () => _recharge(context, ref),
+              icon: const Icon(Icons.add_card_outlined),
+            ),
+        ],
+      ),
       body: wallet.when(
         loading: () => const VmfsLoadingView(),
         error: (e, _) => VmfsErrorView(message: e.toString(), onRetry: () => ref.invalidate(walletDetailProvider)),

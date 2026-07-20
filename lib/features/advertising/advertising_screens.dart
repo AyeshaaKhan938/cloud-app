@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/widgets/vmfs_resource_list.dart';
-import '../../core/widgets/vmfs_widgets.dart';
+import '../../core/widgets/vmfs_crud_screen.dart';
+import '../../data/vmfs_repository.dart';
 import '../auth/auth_provider.dart';
 
 final advertisementsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
@@ -23,27 +23,27 @@ class AdvertisementsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(advertisementsProvider);
+    final canManage = ref.watch(authProvider.select((s) => s.user?.canAccess('advertising') ?? false));
+    final repo = ref.read(repositoryProvider);
     final currency = NumberFormat.simpleCurrency();
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Advertisements')),
-      body: items.when(
-        loading: () => const VmfsLoadingView(),
-        error: (e, _) => VmfsErrorView(message: e.toString(), onRetry: () => ref.invalidate(advertisementsProvider)),
-        data: (list) => buildVmfsResourceList(
-          list: list,
-          onRefresh: () async => ref.invalidate(advertisementsProvider),
-          emptyTitle: 'No advertisements',
-          itemBuilder: (item) => Card(
-            child: ListTile(
-              title: Text(item['title'] as String? ?? 'Ad'),
-              subtitle: Text('${item['type_label'] ?? item['type']} · ${item['advertiser_name'] ?? ''}'),
-              trailing: Text(currency.format((item['cost'] as num?)?.toDouble() ?? 0)),
-            ),
-          ),
-        ),
-      ),
+    return VmfsCrudScreen(
+      title: 'Advertisements',
+      provider: advertisementsProvider,
+      emptyTitle: 'No advertisements',
+      canManage: canManage,
+      fields: const [
+        VmfsCrudField(key: 'title', label: 'Title', required: true),
+        VmfsCrudField(key: 'type', label: 'Type (image/video)', initialValue: 'image'),
+        VmfsCrudField(key: 'advertiser_name', label: 'Advertiser'),
+        VmfsCrudField(key: 'link_url', label: 'Link URL'),
+      ],
+      itemTitle: (item) => item['title'] as String? ?? 'Ad',
+      itemSubtitle: (item) => '${item['type_label'] ?? item['type']} · ${item['advertiser_name'] ?? ''}',
+      itemTrailing: (item) => currency.format((item['cost'] as num?)?.toDouble() ?? 0),
+      onCreate: repo.createAdvertisement,
+      onUpdate: repo.updateAdvertisement,
+      onDelete: repo.deleteAdvertisement,
     );
   }
 }
@@ -53,25 +53,20 @@ class AdvertisementGroupsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(advertisementGroupsProvider);
+    final canManage = ref.watch(authProvider.select((s) => s.user?.canAccess('advertising') ?? false));
+    final repo = ref.read(repositoryProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Advertisement groups')),
-      body: items.when(
-        loading: () => const VmfsLoadingView(),
-        error: (e, _) => VmfsErrorView(message: e.toString(), onRetry: () => ref.invalidate(advertisementGroupsProvider)),
-        data: (list) => buildVmfsResourceList(
-          list: list,
-          onRefresh: () async => ref.invalidate(advertisementGroupsProvider),
-          emptyTitle: 'No advertisement groups',
-          itemBuilder: (item) => Card(
-            child: ListTile(
-              title: Text(item['name'] as String? ?? 'Group'),
-              trailing: Text('${item['advertisement_count'] ?? 0} ads'),
-            ),
-          ),
-        ),
-      ),
+    return VmfsCrudScreen(
+      title: 'Advertisement groups',
+      provider: advertisementGroupsProvider,
+      emptyTitle: 'No advertisement groups',
+      canManage: canManage,
+      fields: const [VmfsCrudField(key: 'name', label: 'Group name', required: true)],
+      itemTitle: (item) => item['name'] as String? ?? 'Group',
+      itemSubtitle: (item) => '${item['advertisement_count'] ?? 0} ads',
+      onCreate: repo.createAdvertisementGroup,
+      onUpdate: repo.updateAdvertisementGroup,
+      onDelete: repo.deleteAdvertisementGroup,
     );
   }
 }
@@ -81,22 +76,20 @@ class AdvertisementTagsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(advertisementTagsProvider);
+    final canManage = ref.watch(authProvider.select((s) => s.user?.canAccess('advertising') ?? false));
+    final repo = ref.read(repositoryProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Advertisement tags')),
-      body: items.when(
-        loading: () => const VmfsLoadingView(),
-        error: (e, _) => VmfsErrorView(message: e.toString(), onRetry: () => ref.invalidate(advertisementTagsProvider)),
-        data: (list) => buildVmfsResourceList(
-          list: list,
-          onRefresh: () async => ref.invalidate(advertisementTagsProvider),
-          emptyTitle: 'No tags',
-          itemBuilder: (item) => Card(
-            child: ListTile(title: Text(item['name'] as String? ?? 'Tag')),
-          ),
-        ),
-      ),
+    return VmfsCrudScreen(
+      title: 'Advertisement tags',
+      provider: advertisementTagsProvider,
+      emptyTitle: 'No tags',
+      canManage: canManage,
+      fields: const [VmfsCrudField(key: 'name', label: 'Tag name', required: true)],
+      itemTitle: (item) => item['name'] as String? ?? 'Tag',
+      itemSubtitle: (_) => 'Advertisement tag',
+      onCreate: repo.createAdvertisementTag,
+      onUpdate: repo.updateAdvertisementTag,
+      onDelete: repo.deleteAdvertisementTag,
     );
   }
 }

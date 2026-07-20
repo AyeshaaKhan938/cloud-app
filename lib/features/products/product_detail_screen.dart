@@ -22,9 +22,23 @@ class ProductDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final detail = ref.watch(productDetailProvider(productId));
     final currency = NumberFormat.simpleCurrency();
+    final canEdit = ref.watch(authProvider.select((s) => s.user?.canAccess('products') ?? false));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Product')),
+      appBar: AppBar(
+        title: const Text('Product'),
+        actions: [
+          if (canEdit)
+            IconButton(
+              tooltip: 'Edit product',
+              onPressed: () async {
+                final changed = await context.push<bool>('/products/$productId/edit');
+                if (changed == true) ref.invalidate(productDetailProvider(productId));
+              },
+              icon: const Icon(Icons.edit_outlined),
+            ),
+        ],
+      ),
       body: detail.when(
         loading: () => const VmfsLoadingView(),
         error: (e, _) => VmfsErrorView(

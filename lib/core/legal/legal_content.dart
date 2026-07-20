@@ -8,83 +8,109 @@ abstract final class LegalContent {
   static const String privacyPolicy = '''
 Last updated: July 2026
 
-$companyName ("we", "us") operates the VMFS Cloud mobile application for authorized vending operators and administrators.
+$companyName ("VMFS", "we", "us") provides the VMFS Cloud platform and mobile application for authorized vending operators, franchise partners, and administrators.
 
 Information we collect
-• Account credentials (email) to authenticate you against your existing VMFS Cloud account.
-• Business data you access through the app (machines, orders, products, support tickets) as permitted by your role.
-• Device/network data needed to deliver the service (IP address, app version, crash diagnostics if enabled by your device OS).
+• Account credentials (email) to authenticate against your VMFS Cloud account.
+• Operational data displayed in the app: machines, slots, products, orders, advertisements, lotteries, coupons, wallet balance, team members, and support tickets — according to your role permissions.
+• Technical data required to operate the service (IP address, device type, app version, and diagnostic logs if enabled by your device).
 
 How we use information
-• To sign you in and keep your session secure.
-• To display operational data from your VMFS Cloud account.
-• To respond to support requests you submit through the app.
+• To authenticate you and maintain a secure session.
+• To display the same business data available in the VMFS Cloud web admin portal.
+• To process support tickets you create in the app.
+• To improve reliability and security of the platform.
 
-Data storage & security
-• Authentication tokens are stored securely on your device.
-• Data is transmitted over HTTPS to $websiteUrl.
+Data sharing
 • We do not sell personal information.
+• Data is shared only with your organization’s authorized VMFS administrators and service providers required to host VMFS Cloud.
 
-Account deletion
-• This app uses accounts created in VMFS Cloud. To close an account or delete personal data, contact $supportEmail or your VMFS administrator.
+Security
+• Sessions use encrypted HTTPS to $websiteUrl.
+• Authentication tokens are stored securely on your device.
+
+Your choices
+• Use the same web admin account credentials; the mobile app does not create standalone accounts.
+• To request account closure or data deletion, contact $supportEmail or your VMFS administrator.
 
 Contact
 • Email: $supportEmail
-• Web: $websiteUrl
+• Web: $websiteUrl/admin
 ''';
 
   static const String termsOfService = '''
 Last updated: July 2026
 
-By using the VMFS Cloud mobile app you agree to these terms.
+VMFS USA — Cloud Platform Terms & Conditions
 
-Eligibility
-• You must have an authorized VMFS Cloud administrator or operator account.
-• You are responsible for keeping your login credentials confidential.
+1. Acceptance
+By signing in to the VMFS Cloud mobile app you agree to these Terms & Conditions and our Privacy Policy. This app is an extension of the VMFS Cloud web admin portal at $websiteUrl.
 
-Permitted use
-• Use the app only for legitimate VMFS business operations.
-• Do not attempt to bypass security, scrape data, or interfere with service availability.
+2. Authorized use
+• You must hold a valid VMFS Cloud account issued by your organization or VMFS USA.
+• You may use the app only for legitimate vending operations: monitoring machines and slots, reviewing products, orders, advertisements, lotteries, coupons, wallet activity, reports, and support tickets.
+• You must keep your credentials confidential and notify your administrator of unauthorized access.
 
-Service availability
-• The app depends on connectivity to $websiteUrl.
-• Features may change as the VMFS Cloud platform evolves.
+3. Platform scope
+• Mobile features mirror web permissions for your role. Some administrative actions may remain web-only.
+• Data shown in the app is sourced from VMFS Cloud; verify critical operational decisions using the primary web system when required.
 
-Disclaimer
-• Operational data is provided "as is" for business monitoring; verify critical decisions using primary VMFS Cloud systems when required.
+4. Service availability
+• The app requires connectivity to $websiteUrl.
+• VMFS may update, suspend, or modify features to maintain security and platform integrity.
 
-Termination
-• We may suspend access for policy violations or at the request of your organization administrator.
+5. Acceptable conduct
+You agree not to:
+• Reverse engineer, scrape, or overload VMFS Cloud systems.
+• Access data outside your assigned role or organization.
+• Upload malicious content through support channels.
 
-Contact
-• $supportEmail
+6. Intellectual property
+VMFS USA logos, software, and platform content remain the property of VMFS USA and its licensors.
+
+7. Disclaimer
+Operational metrics, inventory, and sales data are provided for business monitoring "as is" without warranty of uninterrupted accuracy.
+
+8. Limitation of liability
+To the maximum extent permitted by law, VMFS USA is not liable for indirect or consequential damages arising from use of the mobile app or cloud platform.
+
+9. Termination
+Access may be suspended for policy violations or when your VMFS Cloud account is disabled by an administrator.
+
+10. Contact
+Questions about these terms: $supportEmail
 ''';
 
   static const List<({String question, String answer})> helpFaq = [
     (
       question: 'How do I sign in?',
       answer:
-          'Use the same email and password as the VMFS Cloud web admin at cloud.vmfsusa.com/admin. This app does not create new accounts.',
+          'Use the same email and password as the VMFS Cloud web admin at cloud.vmfsusa.com/admin. Accept the Terms & Privacy Policy on the login screen.',
+    ),
+    (
+      question: 'Why do I see "Unauthenticated" on first open?',
+      answer:
+          'Update to the latest app build. If it persists, sign out and sign in again. The app verifies your session before loading the dashboard.',
     ),
     (
       question: 'Why do I see "Cannot reach VMFS Cloud"?',
       answer:
-          'Check your internet connection and confirm cloud.vmfsusa.com opens in your phone browser. The server must be online and reachable.',
+          'Check your internet connection and confirm cloud.vmfsusa.com opens in your phone browser.',
     ),
     (
-      question: 'Who can see my data?',
+      question: 'What can I do in the mobile app?',
       answer:
-          'You only see machines, orders, and reports linked to your VMFS account role. Access is enforced by the VMFS Cloud backend.',
+          'View dashboard stats, machines & slots, products, orders, advertisements, lotteries, coupons, wallet, reports, team members, and support tickets — based on your web role permissions.',
     ),
     (
       question: 'How do I get support?',
       answer:
-          'Open Support from the top bar to view or create tickets. You can also email support@vmfsusa.com.',
+          'Tap Support in the top bar or open Help in the More menu. Email support@vmfsusa.com.',
     ),
     (
       question: 'How do I delete my account?',
       answer:
-          'Contact your VMFS administrator or email support@vmfsusa.com. Account removal is handled through VMFS Cloud, not inside this app.',
+          'Contact your VMFS administrator or email support@vmfsusa.com. Account removal is handled in VMFS Cloud, not inside this app.',
     ),
   ];
 }
